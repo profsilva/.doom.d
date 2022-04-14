@@ -51,3 +51,9 @@
 
 (unpin! org-roam)
 (package! org-roam-ui)
+
+(package! nov)
+
+(package! kindle-highlights-to-org
+  :recipe (:host github
+           :repo "Zweihander-Main/kindle-highlights-to-org"))

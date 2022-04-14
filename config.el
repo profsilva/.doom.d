@@ -89,6 +89,7 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;;  Roam UI
 (use-package! websocket
     :after org-roam)
 
@@ -104,6 +105,88 @@
           org-roam-ui-update-on-save t
           org-roam-ui-open-on-start t))
 
+;; Kindle Highlights
+(use-package! kindle-highlights-to-org
+  :after org-roam
+  :defer t)
+
+;; Cofiguração do leitor de Epubs
+;; retirado de: https://tecosaur.github.io/emacs-config/config.html
+(use-package! nov
+  :mode ("\\.epub\\'" . nov-mode)
+  :config
+  (map! :map nov-mode-map
+        :n "d" #'nov-scroll-up
+        :n "u" #'nov-scroll-down
+        :n "gn" #'nov-next-document
+        :n "gp" #'nov-previous-document
+        :n "gr" #'nov-render-document
+        :n "gm" #'nov-display-metadata
+        :n "gf" #'nov-history-forward
+        :n "gb" #'nov-history-back
+        )
+
+  (defun doom-modeline-segment--nov-info ()
+    (concat
+     " "
+     (propertize
+      (cdr (assoc 'creator nov-metadata))
+      'face 'doom-modeline-project-parent-dir)
+     " "
+     (cdr (assoc 'title nov-metadata))
+     " "
+     (propertize
+      (format "%d/%d"
+              (1+ nov-documents-index)
+              (length nov-documents))
+      'face 'doom-modeline-info)))
+
+  (advice-add 'nov-render-title :override #'ignore)
+
+  (defun +nov-mode-setup ()
+    (face-remap-add-relative 'variable-pitch
+                             :family "Merriweather"
+                             :height 1.0
+                             :width 'semi-expanded)
+    (face-remap-add-relative 'default :height 1.0)
+    (setq-local line-spacing 0.2
+                next-screen-context-lines 4
+                shr-use-colors nil)
+    (require 'visual-fill-column nil t)
+    (setq-local visual-fill-column-center-text t
+                visual-fill-column-width 70
+                nov-text-width 68)
+    (visual-fill-column-mode 1)
+    (hl-line-mode -1)
+
+    (add-to-list '+lookup-definition-functions #'+lookup/dictionary-definition)
+
+    (setq-local mode-line-format
+                `((:eval
+                   (doom-modeline-segment--workspace-name))
+                  (:eval
+                   (doom-modeline-segment--window-number))
+                  (:eval
+                   (doom-modeline-segment--nov-info))
+                  ,(propertize
+                    " %P "
+                    'face 'doom-modeline-buffer-minor-mode)
+                  ,(propertize
+                    " "
+                    'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
+                    'display `((space
+                                :align-to
+                                (- (+ right right-fringe right-margin)
+                                   ,(* (let ((width (doom-modeline--font-width)))
+                                         (or (and (= width 1) 1)
+                                             (/ width (frame-char-width) 1.0)))
+                                       (string-width
+                                        (format-mode-line (cons "" '(:eval (doom-modeline-segment--major-mode))))))))))
+                  (:eval (doom-modeline-segment--major-mode)))))
+
+  (add-hook 'nov-mode-hook #'+nov-mode-setup))
+
+;; Markdown Map
 (map! :localleader
       :map markdown-mode-map
       :prefix ("i" . "Insert")
