@@ -41,22 +41,6 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
-(setq deft-directory "~/org/"
-      deft-default-extension '("org" "md" "txt")
-      deft-recursive t)
-
-(after! org
-  (setq org-special-ctrl-a/e t
-        org-special-ctrl-k t)
-  (setq org-use-speed-commands
-        (lambda ()
-          (and (looking-at org-outline-regexp)
-               (looking-back "^\**")))))
-
-(after! org
-  (setq org-roam-directory "~/org/roam"))
-
-
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
 ;;
@@ -88,6 +72,119 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
+;; Deft
+(setq deft-directory "~/org/"
+      deft-default-extension '("org" "md" "txt")
+      deft-recursive t)
+
+(after! org
+  (setq org-special-ctrl-a/e t
+        org-special-ctrl-k t)
+  (setq org-use-speed-commands
+        (lambda ()
+          (and (looking-at org-outline-regexp)
+               (looking-back "^\**")))))
+
+(after! org-roam
+  :ensure t
+  :custom
+  (setq org-roam-directory "~/org")
+  (setq org-roam-dailies-capture-templates
+        '(
+          ("d" "Diário" entry "* %<%H:%M>: :terapia: %?"
+           :if-new (file+head "%<%Y-%m-%d>.org"
+                              "#+title: %<%Y-%m-%d>\n"))
+          ))
+  (setq org-roam-capture-templates
+        '(
+          ("n" "nota simples" plain
+           "\n* %?"
+           :if-new (file+head "${slug}.org"
+                              "#+title: ${title}\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ("o" "Observação" plain
+           "\n* %? \n\n    %i\n%a"
+           :if-new (file+head "${slug}.org"
+                              "#+title: ${title}\n#+filetags: :observação:")
+           :immediate-finish t
+           :unnarrowed t)
+          ("s" "Síntese" plain
+           "\n* %? \n\n    %a"
+           :if-new (file+head "${slug}.org"
+                              "#+title: ${title}\n#+filetags: :síntese:")
+           :immediate-finish t
+           :unnarrowed t)
+          ("p" "Pergunta" plain
+           "\n* %? \n\n    %a"
+           :if-new (file+head "${slug}.org"
+                              "#+title: ${title}\n#+filetags: :pergunta:")
+           :immediate-finish t
+           :unnarrowed t)
+          )
+        )
+  :config
+  (org-roam-setup)
+  )
+
+(setq org-capture-templates
+      '(("f" "Nota Fugaz" entry  (file "~/org/inbox.org")
+       "* %?\n")))
+
+(defun jethro/org-capture-slipbox ()
+  (interactive)
+  (org-capture nil "f"))
+
+(setq! citar-bibliography '("~/org/biblio.bib"))
+
+;; Função que cria um template de citação para o org-roam
+;; Retirado de: https://jethrokuan.github.io/org-roam-guide/
+(defun jethro/org-roam-node-from-cite (keys-entries)
+    (interactive (list (citar-select-ref :multiple nil :rebuild-cache t)))
+    (let ((title (citar--format-entry-no-widths (cdr keys-entries)
+                                                "${author editor} :: ${title}")))
+      (org-roam-capture- :templates
+                         '(("r" "reference" plain "%?" :if-new
+                            (file+head "${citekey}.org"
+                                       ":PROPERTIES:
+:ROAM_REFS: [cite:@${citekey}]
+:END:
+#+title: ${title}\n#+filetags: :referência:")
+                            :immediate-finish t
+                            :unnarrowed t))
+                         :info (list :citekey (car keys-entries))
+                         :node (org-roam-node-create :title title)
+                         :props '(:finalize find-file))))
+
+;; Função que adiciona Tag a novas capturas do org-roam
+;; Retirado de: https://jethrokuan.github.io/org-roam-guide/
+(defun jethro/tag-new-node-as-draft ()
+  (org-roam-tag-add '("rascunho")))
+
+(add-hook 'org-roam-capture-new-node-hook #'jethro/tag-new-node-as-draft)
+
+;; Roam map and Elfeed
+(map! :leader
+      (:prefix ("r" . "Roam")
+       :desc "Journal"           "j" 'org-roam-dailies-goto-today
+       :desc "Nova Nota"         "n" 'org-roam-capture
+       :desc "Find"              "f" 'org-roam-node-find
+       :desc "Nota de biblio."   "b" 'jethro/org-roam-node-from-cite
+       :desc "Insert"            "i" 'org-roam-node-insert
+       :desc "Roam buffer"       "r" 'org-roam-buffer-toggle
+       :desc "Tag add"           "t" 'org-roam-tag-add
+       :desc "Tag remove"        "T" 'org-roam-tag-remove
+       :desc "Alias add"         "a" 'org-roam-alias-add
+       :desc "Alias remove"      "A" 'org-roam-alias-remove
+       :desc "Nota Fugaz"        "g" 'jethro/org-capture-slipbox)
+      (:prefix ("e" . "Elfeed")
+       :desc "Elfeed"                "e" 'elfeed
+       :desc "Update"                "u" 'elfeed-update
+       :desc "Update feed"           "f" 'elfeed-update-feed
+                                        ;:desc ""           "" '
+       )
+      )
 
 ;;  Roam UI
 (use-package! websocket
@@ -201,3 +298,13 @@
       :desc "List Item"     "n" 'markdown-insert-list-item
       :desc "Pre"           "p" 'markdown-insert-pre
       )
+
+;; Elfeed
+;;(require 'elfeed-goodies)
+;;(elfeed-goodies/setup)
+(setq elfeed-goodies/entry-pane-size 0.5)
+(after! elfeed
+  (setq elfeed-search-filter "@1-month-ago +unread")
+  )
+
+(add-hook! 'elfeed-search-mode-hook #'elfeed-update)
