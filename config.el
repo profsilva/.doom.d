@@ -165,7 +165,7 @@
 (add-hook 'org-roam-capture-new-node-hook #'jethro/tag-new-node-as-draft)
 
 
-;; Roam map and Elfeed
+;; Roam map
 (map! :leader
       (:prefix ("r" . "Roam")
        :desc "Journal"           "j" 'org-roam-dailies-goto-today
@@ -178,15 +178,17 @@
        :desc "Tag remove"        "T" 'org-roam-tag-remove
        :desc "Alias add"         "a" 'org-roam-alias-add
        :desc "Alias remove"      "A" 'org-roam-alias-remove
-       :desc "Nota Fugaz"        "g" 'jethro/org-capture-slipbox)
+       :desc "Nota Fugaz"        "g" 'jethro/org-capture-slipbox
+       ))
+
+;; Elfeed map
+(map! :leader
       (:prefix ("e" . "Elfeed")
        :desc "Elfeed"            "e" 'elfeed
        :desc "Update"            "u" 'elfeed-update
-       :desc "Update feed"       "f" 'elfeed-update-feed)
-      (:prefix ("ç" . "Pessoal")
-       :desc "Translate buffer"  "t" 'google-translate-smooth-translate
-       )
-      )
+       :desc "Update feed"       "f" 'elfeed-update-feed
+       ))
+
 
 ;;  Roam UI
 (use-package! websocket
@@ -358,3 +360,9 @@
   (define-key evil-motion-state-map "gt" 'evil-google-translate)
   (define-key evil-visual-state-map "gt" 'evil-google-translate)
 
+
+;; Comandos pessoais
+(map! :leader
+      (:prefix ("ç" . "Pessoal")
+       :desc "Translate buffer"  "t" 'google-translate-smooth-translate
+       ))
