@@ -184,7 +184,8 @@
        :desc "Update"            "u" 'elfeed-update
        :desc "Update feed"       "f" 'elfeed-update-feed)
       (:prefix ("ç" . "Pessoal")
-       :desc "Translate buffer"  "t" 'google-translate-smooth-translate
+       :desc "Translate buffer"  "t" 'profsilva/translate
+       :desc "Translate file"    "T" 'translate-open-reference-file
        )
       )
 
@@ -319,11 +320,8 @@
   (google-translate-backend-method 'curl)
   :config
   (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130))
-  (require 'google-translate-smooth-ui)
-  (setq google-translate-output-destination nil
-        google-translate-pop-up-buffer-set-focus t
-        google-translate-default-source-language "en"
-        google-translate-default-target-language "pt"))
+  (setq
+   google-translate-output-destination 'popup))
 
 ;; google-translator operator
 ;; retirado: https://www.reddit.com/r/emacs/comments/3bvhxa/evil_operator_for_googletranslateel/
@@ -348,8 +346,8 @@
 ;; Modifiquei esse trecho para automatizar do inglês para port. Se deixar como abaixo será exibido um prompt de escolha dos idiomas de origem e destino.
     ;; (let* ((source-language (google-translate-read-source-language))
     ;;        (target-language (google-translate-read-target-language)))
-    (let* ((source-language "en")
-           (target-language "pt"))
+    (let* ((source-language en)
+           (target-language pt))
       (google-translate-translate source-language target-language
                                   text-to-translate)))
 
@@ -358,3 +356,4 @@
   (define-key evil-motion-state-map "gt" 'evil-google-translate)
   (define-key evil-visual-state-map "gt" 'evil-google-translate)
 
+(google-translate-read-source-language)

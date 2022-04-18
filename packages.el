@@ -57,3 +57,5 @@
 (package! kindle-highlights-to-org
   :recipe (:host github
            :repo "Zweihander-Main/kindle-highlights-to-org"))
+
+(package! google-translate)
