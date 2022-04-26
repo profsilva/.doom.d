@@ -99,25 +99,25 @@
   (setq org-roam-capture-templates
         '(
           ("n" "nota simples" plain
-           "\n* %?"
+           "\n\n* %?"
            :if-new (file+head "${slug}.org"
                               "#+title: ${title}\n")
            :immediate-finish t
            :unnarrowed t)
           ("o" "Observação" plain
-           "\n* %? \n\n    %i\n%a"
+           "\n\n* %? \n\n    %i\n%a"
            :if-new (file+head "${slug}.org"
                               "#+title: ${title}\n#+filetags: :observação:")
            :immediate-finish t
            :unnarrowed t)
           ("s" "Síntese" plain
-           "\n* %? \n\n    %a"
+           "\n\n* %? \n\n    %a"
            :if-new (file+head "${slug}.org"
                               "#+title: ${title}\n#+filetags: :síntese:")
            :immediate-finish t
            :unnarrowed t)
           ("p" "Pergunta" plain
-           "\n* %? \n\n    %a"
+           "\n\n* %? \n\n    %a"
            :if-new (file+head "${slug}.org"
                               "#+title: ${title}\n#+filetags: :pergunta:")
            :immediate-finish t
@@ -355,14 +355,27 @@
       (google-translate-translate source-language target-language
                                   text-to-translate)))
 
-   ;; use 'gt' as operator key-combo:
-  (define-key evil-normal-state-map "gt" 'evil-google-translate)
-  (define-key evil-motion-state-map "gt" 'evil-google-translate)
-  (define-key evil-visual-state-map "gt" 'evil-google-translate)
+;; use 'gt' as operator key-combo:
+(define-key evil-normal-state-map "gt" 'evil-google-translate)
+(define-key evil-motion-state-map "gt" 'evil-google-translate)
+(define-key evil-visual-state-map "gt" 'evil-google-translate)
 
+;; Avy
+(define-key evil-normal-state-map "çs"  'avy-goto-char-2)
+(define-key evil-normal-state-map "çl"  'avy-goto-char)
 
 ;; Comandos pessoais
 (map! :leader
       (:prefix ("ç" . "Pessoal")
-       :desc "Translate buffer"  "t" 'google-translate-smooth-translate
+       :desc "Toggle notes"           "t" 'annotate-mode
+       :desc "Add note"               "a" 'annotate-annotate
+       :desc "Deletar note"           "d" 'annotate-delete-annotation
+       :desc "Next note"              "n" 'annotate-goto-next-annotation
+       :desc "Previus note"           "p" 'annotate-goto-previous-annotation
+       :desc "Summary annotate"       "s" 'annotate-show-annotation-summary
        ))
+
+(map! :map org-mode-map
+      :i "[[" #'org-roam-node-insert
+      :i "[ SPC" (cmd! (insert"[]")
+                      (backward-char)))

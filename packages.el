@@ -50,6 +50,7 @@
 ;(unpin! t)
 
 (unpin! org-roam)
+
 (package! org-roam-ui)
 
 (package! nov)
@@ -59,3 +60,7 @@
            :repo "Zweihander-Main/kindle-highlights-to-org"))
 
 (package! google-translate)
+
+(package! annotate.el
+  :recipe (:host github
+           :repo "bastibe/annotate.el"))
