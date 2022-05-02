@@ -49,6 +49,8 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
+(package! key-chord)
+
 (unpin! org-roam)
 
 (package! org-roam-ui)
@@ -64,3 +66,6 @@
 (package! annotate.el
   :recipe (:host github
            :repo "bastibe/annotate.el"))
+
+(package! virtualenvwrapper)
+

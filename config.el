@@ -361,21 +361,79 @@
 (define-key evil-visual-state-map "gt" 'evil-google-translate)
 
 ;; Avy
-(define-key evil-normal-state-map "çs"  'avy-goto-char-2)
-(define-key evil-normal-state-map "çl"  'avy-goto-char)
+(define-key evil-normal-state-map "s"  'avy-goto-char-2)
 
 ;; Comandos pessoais
 (map! :leader
-      (:prefix ("ç" . "Pessoal")
+      (:prefix ("æ" . "Pessoal")
        :desc "Toggle notes"           "t" 'annotate-mode
        :desc "Add note"               "a" 'annotate-annotate
        :desc "Deletar note"           "d" 'annotate-delete-annotation
        :desc "Next note"              "n" 'annotate-goto-next-annotation
        :desc "Previus note"           "p" 'annotate-goto-previous-annotation
        :desc "Summary annotate"       "s" 'annotate-show-annotation-summary
-       ))
+       )
+      (:prefix ("v" . "Virtual Env")
+       :desc "List envs"              "l" 'pyvenv-virtualenv-list
+       :desc "Create env"             "c" 'pyvenv-create
+       :desc "Work env"               "w" 'pyvenv-workon
+       :desc "Desctivate env"         "d" 'pyvenv-deactivate
+      ))
 
 (map! :map org-mode-map
       :i "[[" #'org-roam-node-insert
       :i "[ SPC" (cmd! (insert"[]")
                       (backward-char)))
+
+(map! :map python-mode-map
+      :n "»b" #'python-shell-send-buffer
+      :n "»f" #'python-shell-send-defun
+      :n "»r" #'python-shell-send-region
+      :n "»." #'python-shell-send-file
+      :n "»p" #'run-python
+      )
+
+(add-hook 'python-mode-local-vars-hook #'lsp!)
+;; Where =MAJOR-MODE= is the major mode you're targeting. e.g.
+;; lisp-mode-local-vars-hook
+
+(use-package! virtualenvwrapper)
+(after! virtualenvwrapper
+  (setq venv-location "~/code/virtualenvs/"))
+
+(use-package! key-chord
+  :config
+  (key-chord-mode 1)
+  (setq key-chord-one-key-delay 0.10 ; same key (e.g. xx)
+        key-chord-two-keys-delay 0.05))
+
+(defun simulate-seq (seq)
+  (setq unread-command-events (listify-key-sequence seq)))
+
+(key-chord-define-global (kbd "ça") (cmd! (simulate-seq "\C-a")))
+(key-chord-define-global (kbd "çb") (cmd! (simulate-seq "\C-b")))
+(key-chord-define-global (kbd "çc") (cmd! (simulate-seq "\C-c")))
+(key-chord-define-global (kbd "çd") (cmd! (simulate-seq "\C-d")))
+(key-chord-define-global (kbd "çe") (cmd! (simulate-seq "\C-e")))
+(key-chord-define-global (kbd "çf") (cmd! (simulate-seq "\C-f")))
+(key-chord-define-global (kbd "çg") (cmd! (simulate-seq "\C-g")))
+(key-chord-define-global (kbd "çh") (cmd! (simulate-seq "\C-h")))
+(key-chord-define-global (kbd "çi") 'switch-to-buffer)
+(key-chord-define-global (kbd "çj") (cmd! (simulate-seq "\C-j")))
+(key-chord-define-global (kbd "çk") (cmd! (simulate-seq "\C-k")))
+(key-chord-define-global (kbd "çl") (cmd! (simulate-seq "\C-l")))
+(key-chord-define-global (kbd "çm") (cmd! (simulate-seq "\C-m")))
+(key-chord-define-global (kbd "çn") (cmd! (simulate-seq "\C-n")))
+(key-chord-define-global (kbd "ço") (cmd! (simulate-seq "\C-o")))
+(key-chord-define-global (kbd "çp") (cmd! (simulate-seq "\C-p")))
+(key-chord-define-global (kbd "çq") (cmd! (simulate-seq "\C-q")))
+(key-chord-define-global (kbd "çr") (cmd! (simulate-seq "\C-r")))
+(key-chord-define-global (kbd "çs") (cmd! (simulate-seq "\C-s")))
+(key-chord-define-global (kbd "çt") '+vterm/toggle)
+(key-chord-define-global (kbd "çu") (cmd! (simulate-seq "\C-u")))
+(key-chord-define-global (kbd "çv") (cmd! (simulate-seq "\C-v")))
+(key-chord-define-global (kbd "çw") (cmd! (simulate-seq "\C-w")))
+(key-chord-define-global (kbd "çx") (cmd! (simulate-seq "\C-x")))
+(key-chord-define-global (kbd "çy") (cmd! (simulate-seq "\C-y")))
+(key-chord-define-global (kbd "çz") (cmd! (simulate-seq "\C-z")))
+
