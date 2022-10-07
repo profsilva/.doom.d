@@ -212,80 +212,25 @@
   :defer t)
 
 ;; Cofiguração do leitor de Epubs
-;; retirado de: https://tecosaur.github.io/emacs-config/config.html
-(use-package! nov
-  :mode ("\\.epub\\'" . nov-mode)
-  :config
-  (map! :map nov-mode-map
-        :n "d" #'nov-scroll-up
-        :n "u" #'nov-scroll-down
-        :n "gn" #'nov-next-document
-        :n "gp" #'nov-previous-document
-        :n "gr" #'nov-render-document
-        :n "gm" #'nov-display-metadata
-        :n "gf" #'nov-history-forward
-        :n "gb" #'nov-history-back
-        )
+(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
 
-  (defun doom-modeline-segment--nov-info ()
-    (concat
-     " "
-     (propertize
-      (cdr (assoc 'creator nov-metadata))
-      'face 'doom-modeline-project-parent-dir)
-     " "
-     (cdr (assoc 'title nov-metadata))
-     " "
-     (propertize
-      (format "%d/%d"
-              (1+ nov-documents-index)
-              (length nov-documents))
-      'face 'doom-modeline-info)))
+;; Set custom font for epub
+(defun my-nov-font-setup ()
+  (face-remap-add-relative 'variable-pitch :family "Roboto"
+                                           :height 1.0))
 
-  (advice-add 'nov-render-title :override #'ignore)
-
-  (defun +nov-mode-setup ()
-    (face-remap-add-relative 'variable-pitch
-                             :family "Merriweather"
-                             :height 1.0
-                             :width 'semi-expanded)
-    (face-remap-add-relative 'default :height 1.0)
-    (setq-local line-spacing 0.2
-                next-screen-context-lines 4
-                shr-use-colors nil)
-    (require 'visual-fill-column nil t)
-    (setq-local visual-fill-column-center-text t
-                visual-fill-column-width 70
-                nov-text-width 68)
-    (visual-fill-column-mode 1)
-    (hl-line-mode -1)
-
-    (add-to-list '+lookup-definition-functions #'+lookup/dictionary-definition)
-
-    (setq-local mode-line-format
-                `((:eval
-                   (doom-modeline-segment--workspace-name))
-                  (:eval
-                   (doom-modeline-segment--window-number))
-                  (:eval
-                   (doom-modeline-segment--nov-info))
-                  ,(propertize
-                    " %P "
-                    'face 'doom-modeline-buffer-minor-mode)
-                  ,(propertize
-                    " "
-                    'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
-                    'display `((space
-                                :align-to
-                                (- (+ right right-fringe right-margin)
-                                   ,(* (let ((width (doom-modeline--font-width)))
-                                         (or (and (= width 1) 1)
-                                             (/ width (frame-char-width) 1.0)))
-                                       (string-width
-                                        (format-mode-line (cons "" '(:eval (doom-modeline-segment--major-mode))))))))))
-                  (:eval (doom-modeline-segment--major-mode)))))
-
-  (add-hook 'nov-mode-hook #'+nov-mode-setup))
+(add-hook 'nov-mode-hook 'my-nov-font-setup)
+(map! :map nov-mode-map
+      :n "d" #'nov-scroll-up
+      :n "u" #'nov-scroll-down
+      :n "t" #'nov-goto-toc
+      :n "gn" #'nov-next-document
+      :n "gp" #'nov-previous-document
+      :n "gr" #'nov-render-document
+      :n "gm" #'nov-display-metadata
+      :n "gf" #'nov-history-forward
+      :n "gb" #'nov-history-back
+      )
 
 ;; Markdown Map
 (map! :localleader
@@ -309,6 +254,27 @@
 (setq elfeed-goodies/entry-pane-size 0.5)
 (after! elfeed
   (setq elfeed-search-filter "@1-month-ago +unread")
+  (setq elfeed-goodies/entry-pane-size 0.5)
+  (evil-define-key 'normal elfeed-show-mode-map
+    (kbd "n") 'elfeed-goodies/split-show-next)
+  (evil-define-key 'normal elfeed-show-mode-map
+    (kbd "p") 'elfeed-goodies/split-show-prev)
+  (evil-define-key 'normal elfeed-search-mode-map
+    (kbd "n") 'elfeed-goodies/split-show-next)
+  (evil-define-key 'normal elfeed-search-mode-map
+    (kbd "p") 'elfeed-goodies/split-show-prev)
+  (evil-define-key 'normal elfeed-search-mode-map
+    (kbd "u") 'elfeed-search-tag-all-unread)
+  (evil-define-key 'normal elfeed-search-mode-map
+    (kbd "d") 'elfeed-search-untag-all-unread)
+  (evil-define-key 'normal elfeed-show-mode-map
+    (kbd "u") 'elfeed-search-tag-all-unread)
+  (evil-define-key 'normal elfeed-show-mode-map
+    (kbd "d") 'elfeed-search-untag-all-unread)
+  (evil-define-key 'normal elfeed-search-mode-map
+    (kbd "a") 'elfeed-update)
+  (evil-define-key 'normal elfeed-show-mode-map
+    (kbd "a") 'elfeed-update)
   )
 
 (add-hook! 'elfeed-search-mode-hook #'elfeed-update)
@@ -355,7 +321,7 @@
       (google-translate-translate source-language target-language
                                   text-to-translate)))
 
-;; use 'gt' as operator key-combo:
+;; use 't' as operator key-combo:
 (define-key evil-normal-state-map "gt" 'evil-google-translate)
 (define-key evil-motion-state-map "gt" 'evil-google-translate)
 (define-key evil-visual-state-map "gt" 'evil-google-translate)
@@ -380,6 +346,18 @@
        :desc "Desctivate env"         "d" 'pyvenv-deactivate
       ))
 
+;; Utilizando o virtualenv com Python
+(use-package! virtualenvwrapper)
+(after! virtualenvwrapper
+  (setq venv-location "~/code/virtualenvs/"))
+
+;; ;; Mapeamento do Org-mode para chammar ações no Org-roam
+;; (map! :map org-mode-map
+;;       :i "[[" #'org-roam-node-insert
+;;       :i "[ SPC" (cmd! (insert"[]")
+;;                       (backward-char)))
+
+;; Mapeamento Evil para Python-mode
 (map! :map org-mode-map
       :i "[[" #'org-roam-node-insert
       :i "[ SPC" (cmd! (insert"[]")
@@ -392,15 +370,27 @@
       :n "»." #'python-shell-send-file
       :n "»p" #'run-python
       )
+;; Where =MAJOR-MODE= is the major mode you're targeting. e.g.
+;; lisp-mode-local-vars-hook
+(add-hook 'python-mode-local-vars-hook #'lsp!)
+
+;; Avy
+;; Artigo sensacional: https://karthinks.com/software/avy-can-do-anything/
+;;Configurando o avy para acessar todas as janelas visíveis
+(setq avy-all-windows t)
+;; Mapeamento do Avy, desativamos o evil-snipe no package.el
+(define-key evil-normal-state-map (kbd "gx") (cmd! (simulate-seq "\M-x")))
+(define-key evil-normal-state-map (kbd "çf") 'evil-avy-goto-char-timer)
+(define-key evil-normal-state-map (kbd "gsr") 'avy-move-region)
+(define-key evil-normal-state-map (kbd "gsl") 'avy-move-line)
+(define-key evil-normal-state-map (kbd "gst") 'avy-transpose-lines-in-region)
+(define-key isearch-mode-map (kbd "M-s") 'avy-isearch)
 
 (add-hook 'python-mode-local-vars-hook #'lsp!)
 ;; Where =MAJOR-MODE= is the major mode you're targeting. e.g.
 ;; lisp-mode-local-vars-hook
 
-(use-package! virtualenvwrapper)
-(after! virtualenvwrapper
-  (setq venv-location "~/code/virtualenvs/"))
-
+;; Atalhos utilizando acordes
 (use-package! key-chord
   :config
   (key-chord-mode 1)
@@ -409,6 +399,49 @@
 
 (defun simulate-seq (seq)
   (setq unread-command-events (listify-key-sequence seq)))
+
+(key-chord-define-global (kbd "çc") (cmd! (simulate-seq "\C-c")))
+(key-chord-define-global (kbd "çd") (cmd! (simulate-seq "\C-d")))
+(key-chord-define-global (kbd "çg") (cmd! (simulate-seq "\C-g")))
+(key-chord-define-global (kbd "çh") (cmd! (simulate-seq "\C-h")))
+(key-chord-define-global (kbd "çj") (cmd! (simulate-seq "\C-j")))
+(key-chord-define-global (kbd "çk") (cmd! (simulate-seq "\C-k")))
+(key-chord-define-global (kbd "çs") (cmd! (simulate-seq "\C-s")))
+(key-chord-define-global (kbd "çu") (cmd! (simulate-seq "\C-u")))
+(key-chord-define-global (kbd "çv") (cmd! (simulate-seq "\C-v")))
+(key-chord-define-global (kbd "çy") (cmd! (simulate-seq "\C-y")))
+
+;; Movimentação no texto
+(key-chord-define-global (kbd "ça") 'beginning-of-visual-line)
+(key-chord-define-global (kbd "çe") 'end-of-visual-line)
+;; (key-chord-define-global (kbd "fk") ')
+;; (key-chord-define-global (kbd "fj") ')
+(key-chord-define-global (kbd "fk") 'denote-dired-rename-file)
+(key-chord-define-global (kbd "fj") 'denote)
+
+;;Movimentação entre buffers
+(key-chord-define-global (kbd "fl") 'evil-switch-to-windows-last-buffer)
+(key-chord-define-global (kbd "çi") 'switch-to-buffer)
+
+;; Movimentação entre janelas
+(key-chord-define-global (kbd "wj") 'evil-window-down)
+(key-chord-define-global (kbd "wk") 'evil-window-up)
+(key-chord-define-global (kbd "wl") 'evil-window-right)
+(key-chord-define-global (kbd "wh") 'evil-window-left)
+
+;; Execução de comandos
+(key-chord-define-global (kbd "gh") 'execute-extended-command)
+(key-chord-define-global (kbd "çt") '+vterm/toggle)
+(key-chord-define-global (kbd "çr") 'evil-redo)
+
+(setq org-emphasis-alist
+  '(("*" (bold :slant italic :weight black)) ;; this make bold both italic and bold, but not color change
+    ("/" (italic :foreground "dark salmon" )) ;; italic text, the text will be "dark salmon"
+    ("_" (underline :foreground "cyan" )) ;; underlined text, color is "cyan"
+    ("=" (:background "snow1" :foreground "deep slate blue" )) ;; background of text is "snow1" and text is "deep slate blue"
+    ("~" (:background "PaleGreen1" :foreground "dim gray" ))
+    ("+" (:strike-through nil :foreground "dark orange" ))))
+(setq org-hide-emphasis-markers t) ;; hides the emphasis markers
 
 (key-chord-define-global (kbd "ça") (cmd! (simulate-seq "\C-a")))
 (key-chord-define-global (kbd "çb") (cmd! (simulate-seq "\C-b")))
@@ -437,3 +470,15 @@
 (key-chord-define-global (kbd "çy") (cmd! (simulate-seq "\C-y")))
 (key-chord-define-global (kbd "çz") (cmd! (simulate-seq "\C-z")))
 
+(with-eval-after-load 'org-capture
+  (add-to-list 'org-capture-templates
+               '("d" "New note with Denote" plain
+                 "\n\n* %? \n\n    %i\n%a"
+                 (file denote-last-path)
+                 #'denote-org-capture
+                 :no-save t
+                 :immediate-finish nil
+                 :kill-buffer t
+                 :jump-to-captured t)
+               )
+  )
