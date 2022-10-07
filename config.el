@@ -435,12 +435,44 @@
 (key-chord-define-global (kbd "çr") 'evil-redo)
 
 (setq org-emphasis-alist
-  '(("*" (bold :slant italic :weight black)) ;; this make bold both italic and bold, but not color change
-    ("/" (italic :foreground "dark salmon" )) ;; italic text, the text will be "dark salmon"
-    ("_" (underline :foreground "cyan" )) ;; underlined text, color is "cyan"
-    ("=" (:background "snow1" :foreground "deep slate blue" )) ;; background of text is "snow1" and text is "deep slate blue"
-    ("~" (:background "PaleGreen1" :foreground "dim gray" ))
-    ("+" (:strike-through nil :foreground "dark orange" ))))
+      '(("*" my-org-emphasis-bold)
+        ("/" my-org-emphasis-italic)
+        ("_" my-org-emphasis-underline)
+        ("=" org-verbatim verbatim)
+        ("~" org-code verbatim)
+        ("+" my-org-emphasis-strike-through)))
+
+(defface my-org-emphasis-bold
+  '((default :inherit bold)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#a60000")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#ff8059"))
+  "My bold emphasis for Org.")
+
+(defface my-org-emphasis-italic
+  '((default :inherit italic)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#005e00")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#44bc44"))
+  "My italic emphasis for Org.")
+
+(defface my-org-emphasis-underline
+  '((default :inherit underline)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#813e00")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#d0bc00"))
+  "My underline emphasis for Org.")
+
+(defface my-org-emphasis-strike-through
+  '((((class color) (min-colors 88) (background light))
+     :strike-through "#C40107" :foreground "#505050")
+    (((class color) (min-colors 88) (background dark))
+     :strike-through "#C40107" :foreground "#a8a8a8"))
+  "My strike-through emphasis for Org.")
+
 (setq org-hide-emphasis-markers t) ;; hides the emphasis markers
 
 (key-chord-define-global (kbd "ça") (cmd! (simulate-seq "\C-a")))
@@ -470,15 +502,3 @@
 (key-chord-define-global (kbd "çy") (cmd! (simulate-seq "\C-y")))
 (key-chord-define-global (kbd "çz") (cmd! (simulate-seq "\C-z")))
 
-(with-eval-after-load 'org-capture
-  (add-to-list 'org-capture-templates
-               '("d" "New note with Denote" plain
-                 "\n\n* %? \n\n    %i\n%a"
-                 (file denote-last-path)
-                 #'denote-org-capture
-                 :no-save t
-                 :immediate-finish nil
-                 :kill-buffer t
-                 :jump-to-captured t)
-               )
-  )
