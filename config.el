@@ -39,7 +39,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org/")
+(setq org-directory "~/Dropbox/Org/")
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -74,7 +74,7 @@
 ;; they are implemented.
 
 ;; Deft
-(setq deft-directory "~/org/"
+(setq deft-directory "~/Dropbox/Org/"
       deft-default-extension '("org" "md" "txt")
       deft-recursive t)
 
@@ -89,7 +89,7 @@
 (after! org-roam
   :ensure t
   :custom
-  (setq org-roam-directory "~/org")
+  (setq org-roam-directory "~/Dropbox/Org/Roam")
   (setq org-roam-dailies-capture-templates
         '(
           ("d" "Diário" entry "* %<%H:%M>: :terapia: %?"
@@ -105,7 +105,7 @@
            :immediate-finish t
            :unnarrowed t)
           ("o" "Observação" plain
-           "\n\n* %? \n\n    %i\n%a"
+           "\n\n* %? \n\n    %i \n\n%a"
            :if-new (file+head "${slug}.org"
                               "#+title: ${title}\n#+filetags: :observação:")
            :immediate-finish t
@@ -129,14 +129,14 @@
   )
 
 (setq org-capture-templates
-      '(("f" "Nota Fugaz" entry  (file "~/org/inbox.org")
+      '(("f" "Nota Fugaz" entry  (file "~/Dropbox/Org/inbox.org")
        "* %?\n")))
 
 (defun jethro/org-capture-slipbox ()
   (interactive)
   (org-capture nil "f"))
 
-(setq! citar-bibliography '("~/org/biblio.bib"))
+(setq! citar-bibliography '("~/Dropbox/Org/biblio.bib"))
 
 ;; Função que cria um template de citação para o org-roam
 ;; Retirado de: https://jethrokuan.github.io/org-roam-guide/
@@ -178,17 +178,37 @@
        :desc "Tag remove"        "T" 'org-roam-tag-remove
        :desc "Alias add"         "a" 'org-roam-alias-add
        :desc "Alias remove"      "A" 'org-roam-alias-remove
-       :desc "Nota Fugaz"        "g" 'jethro/org-capture-slipbox
+       :desc "Open graph"        "g" 'org-roam-ui
        ))
 
 ;; Elfeed map
 (map! :leader
-      (:prefix ("e" . "Elfeed")
-       :desc "Elfeed"            "e" 'elfeed
-       :desc "Update"            "u" 'elfeed-update
-       :desc "Update feed"       "f" 'elfeed-update-feed
+      (:prefix ("l" . "Leituras")
+       :desc "Elfeed RSS"               "e" 'elfeed
+       :desc "Update Elfeed"            "u" 'elfeed-update
+       :desc "Update one feed"          "f" 'elfeed-update-feed
+       :desc "Calibre"                  "c" 'calibredb
+       :desc "Open with Emacs"          "o" 'my-calibredb-open-file-with-emacs
        ))
 
+(defun my-calibredb-open-file-with-emacs (&optional candidate)
+  "Open file with Emacs.
+Optional argument CANDIDATE is the selected item."
+  (interactive "P")
+  (unless candidate
+    (setq candidate (car (calibredb-find-candidate-at-point))))
+  (find-file (calibredb-get-file-path candidate t)))
+
+(evil-define-key 'normal calibredb-search-mode-map
+  (kbd "o") 'my-calibredb-open-file-with-emacs)
+(evil-define-key 'normal calibredb-search-mode-map
+  (kbd "a") 'calibredb-add)
+(evil-define-key 'normal calibredb-search-mode-map
+  (kbd "d") 'calibredb-dispatch)
+(evil-define-key 'normal calibredb-search-mode-map
+  (kbd "r") 'calibredb-search-refresh)
+(evil-define-key 'normal calibredb-search-mode-map
+  (kbd "f") 'calibredb-filter-dispatch)
 
 ;;  Roam UI
 (use-package! websocket
@@ -249,12 +269,13 @@
       )
 
 ;; Elfeed
-;;(require 'elfeed-goodies)
-;;(elfeed-goodies/setup)
+(require 'elfeed-goodies)
+(elfeed-goodies/setup)
 (setq elfeed-goodies/entry-pane-size 0.5)
+
 (after! elfeed
   (setq elfeed-search-filter "@1-month-ago +unread")
-  (setq elfeed-goodies/entry-pane-size 0.5)
+  (setq rmh-elfeed-org-files  '("~/Dropbox/Org/Roam/elfeed.org"))
   (evil-define-key 'normal elfeed-show-mode-map
     (kbd "n") 'elfeed-goodies/split-show-next)
   (evil-define-key 'normal elfeed-show-mode-map
@@ -269,15 +290,23 @@
     (kbd "d") 'elfeed-search-untag-all-unread)
   (evil-define-key 'normal elfeed-show-mode-map
     (kbd "u") 'elfeed-search-tag-all-unread)
-  (evil-define-key 'normal elfeed-show-mode-map
-    (kbd "d") 'elfeed-search-untag-all-unread)
   (evil-define-key 'normal elfeed-search-mode-map
-    (kbd "a") 'elfeed-update)
-  (evil-define-key 'normal elfeed-show-mode-map
     (kbd "a") 'elfeed-update)
   )
 
 (add-hook! 'elfeed-search-mode-hook #'elfeed-update)
+
+(use-package! elfeed-tube
+  :after elfeed
+  :demand t
+  :config
+  ;; (setq elfeed-tube-auto-save-p nil) ; default value
+  ;; (setq elfeed-tube-auto-fetch-p t)  ; default value
+  (elfeed-tube-setup)
+  (define-key elfeed-show-mode-map (kbd "F") 'elfeed-tube-fetch)
+  (define-key elfeed-show-mode-map [remap save-buffer] 'elfeed-tube-save)
+  (define-key elfeed-search-mode-map (kbd "F") 'elfeed-tube-fetch)
+  (define-key elfeed-search-mode-map [remap save-buffer] 'elfeed-tube-save))
 
 
 ;; google-translator operator
@@ -326,8 +355,6 @@
 (define-key evil-motion-state-map "gt" 'evil-google-translate)
 (define-key evil-visual-state-map "gt" 'evil-google-translate)
 
-;; Avy
-(define-key evil-normal-state-map "s"  'avy-goto-char-2)
 
 ;; Comandos pessoais
 (map! :leader
@@ -385,10 +412,7 @@
 (define-key evil-normal-state-map (kbd "gsl") 'avy-move-line)
 (define-key evil-normal-state-map (kbd "gst") 'avy-transpose-lines-in-region)
 (define-key isearch-mode-map (kbd "M-s") 'avy-isearch)
-
-(add-hook 'python-mode-local-vars-hook #'lsp!)
-;; Where =MAJOR-MODE= is the major mode you're targeting. e.g.
-;; lisp-mode-local-vars-hook
+(define-key evil-normal-state-map "çs"  'avy-goto-char-2)
 
 ;; Atalhos utilizando acordes
 (use-package! key-chord
@@ -401,7 +425,6 @@
   (setq unread-command-events (listify-key-sequence seq)))
 
 (key-chord-define-global (kbd "çc") (cmd! (simulate-seq "\C-c")))
-(key-chord-define-global (kbd "çd") (cmd! (simulate-seq "\C-d")))
 (key-chord-define-global (kbd "çg") (cmd! (simulate-seq "\C-g")))
 (key-chord-define-global (kbd "çh") (cmd! (simulate-seq "\C-h")))
 (key-chord-define-global (kbd "çj") (cmd! (simulate-seq "\C-j")))
@@ -414,10 +437,7 @@
 ;; Movimentação no texto
 (key-chord-define-global (kbd "ça") 'beginning-of-visual-line)
 (key-chord-define-global (kbd "çe") 'end-of-visual-line)
-;; (key-chord-define-global (kbd "fk") ')
-;; (key-chord-define-global (kbd "fj") ')
 (key-chord-define-global (kbd "fk") 'denote-dired-rename-file)
-(key-chord-define-global (kbd "fj") 'denote)
 
 ;;Movimentação entre buffers
 (key-chord-define-global (kbd "fl") 'evil-switch-to-windows-last-buffer)
@@ -432,7 +452,10 @@
 ;; Execução de comandos
 (key-chord-define-global (kbd "gh") 'execute-extended-command)
 (key-chord-define-global (kbd "çt") '+vterm/toggle)
-(key-chord-define-global (kbd "çr") 'evil-redo)
+
+;; facilitar algumas letras maiúsculas
+(key-chord-define-global (kbd "çr") (cmd! (simulate-seq "\S-r")))
+(key-chord-define-global (kbd "çd") (cmd! (simulate-seq "\S-d")))
 
 (setq org-emphasis-alist
       '(("*" my-org-emphasis-bold)
@@ -478,8 +501,7 @@
 (key-chord-define-global (kbd "ça") (cmd! (simulate-seq "\C-a")))
 (key-chord-define-global (kbd "çb") (cmd! (simulate-seq "\C-b")))
 (key-chord-define-global (kbd "çc") (cmd! (simulate-seq "\C-c")))
-(key-chord-define-global (kbd "çd") (cmd! (simulate-seq "\C-d")))
-(key-chord-define-global (kbd "çe") (cmd! (simulate-seq "\C-e")))
+;;(key-chord-define-global (kbd "çe") (cmd! (simulate-seq "\C-e")))
 (key-chord-define-global (kbd "çf") (cmd! (simulate-seq "\C-f")))
 (key-chord-define-global (kbd "çg") (cmd! (simulate-seq "\C-g")))
 (key-chord-define-global (kbd "çh") (cmd! (simulate-seq "\C-h")))
@@ -492,7 +514,6 @@
 (key-chord-define-global (kbd "ço") (cmd! (simulate-seq "\C-o")))
 (key-chord-define-global (kbd "çp") (cmd! (simulate-seq "\C-p")))
 (key-chord-define-global (kbd "çq") (cmd! (simulate-seq "\C-q")))
-(key-chord-define-global (kbd "çr") (cmd! (simulate-seq "\C-r")))
 (key-chord-define-global (kbd "çs") (cmd! (simulate-seq "\C-s")))
 (key-chord-define-global (kbd "çt") '+vterm/toggle)
 (key-chord-define-global (kbd "çu") (cmd! (simulate-seq "\C-u")))
@@ -502,3 +523,36 @@
 (key-chord-define-global (kbd "çy") (cmd! (simulate-seq "\C-y")))
 (key-chord-define-global (kbd "çz") (cmd! (simulate-seq "\C-z")))
 
+;; ;; Configuração de evil-surround
+;; (setq-default evil-surround-pairs-alist
+;;   (push '(?m . ("$" . "$")) evil-surround-pairs-alist)
+;;   (push '(?p . ("(" . ")")) evil-surround-pairs-alist)
+;;   (push '(?o . ("[" . "]")) evil-surround-pairs-alist)
+;;   (push '(?c . ("{" . "}")) evil-surround-pairs-alist)
+;;   (push '(?t . ("<" . ">")) evil-surround-pairs-alist)
+;;   (push '(?as . ("'" . "'")) evil-surround-pairs-alist)
+;;   (push '(?ad . ("\"" . "\"")) evil-surround-pairs-alist)
+;;   (push '(?n . ("*" . "*")) evil-surround-pairs-alist)
+;;   (push '(?i . ("/" . "/")) evil-surround-pairs-alist)
+;;   (push '(?d . ("=" . "=")) evil-surround-pairs-alist)
+;;   (push '(?r . ("+" . "+")) evil-surround-pairs-alist)
+;;   )
+
+(use-package! calibredb
+  :defer t
+  :config
+  (setq calibredb-root-dir "~/Dropbox/Org/Calibre/")
+  (setq calibredb-db-dir (expand-file-name "metadata.db" calibredb-root-dir))
+  (setq calibredb-library-alist '(
+                                  ("~/Dropbox/Org/Calibre/")
+                                  )))
+
+;; Abreviações
+(setq abbrev-file-name
+      "~/.doom.d/abbrev_defs")
+(setq save-abbrevs 'silently)
+(setq-default abbrev-mode t)
+
+(key-chord-define-global (kbd "ai") 'add-global-abbrev)
+(key-chord-define-global (kbd "al") 'list-abbrevs)
+(key-chord-define-global (kbd "as") 'abbrev-edit-save-buffer)

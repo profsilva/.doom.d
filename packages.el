@@ -69,3 +69,7 @@
 
 (package! virtualenvwrapper)
 
+(package! elfeed-goodies)
+(package! elfeed-tube)
+
+(package! calibredb)
